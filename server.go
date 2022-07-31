@@ -16,10 +16,10 @@ const (
 
 func initializeWebServer() {
 	r := mux.NewRouter()
-	r.HandleFunc("/test", TestHandler)
-	r.HandleFunc("/nordigen/institutions", NordigenGetInstitutionsHandler)
-	r.HandleFunc("/nordigen/requisition-link", NordigenRequisitionLinkHandler)
-	r.Handle("/nordigen/requisition-link", authorize(http.HandlerFunc(NordigenRequisitionLinkHandler)))
+	r.HandleFunc("/test", testHandler)
+	r.HandleFunc("/nordigen/institutions", nordigenGetInstitutionsHandler)
+	r.HandleFunc("/nordigen/requisition-link", nordigenRequisitionLinkHandler)
+	r.Handle("/nordigen/requisition-link", authorize(http.HandlerFunc(nordigenRequisitionLinkHandler)))
 	http.Handle("/", r)
 }
 
@@ -36,7 +36,7 @@ func authorize(next http.Handler) http.Handler {
 	})
 }
 
-func TestHandler(w http.ResponseWriter, r *http.Request) {
+func testHandler(w http.ResponseWriter, r *http.Request) {
 	idToken := r.Header.Get("Authorization")
 	if idToken == "" {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -45,7 +45,7 @@ func TestHandler(w http.ResponseWriter, r *http.Request) {
 	verifyToken(idToken, getFirebaseInstance())
 }
 
-func NordigenGetInstitutionsHandler(w http.ResponseWriter, r *http.Request) {
+func nordigenGetInstitutionsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -76,7 +76,7 @@ func NordigenGetInstitutionsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResp)
 }
 
-func NordigenRequisitionLinkHandler(w http.ResponseWriter, r *http.Request) {
+func nordigenRequisitionLinkHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusBadRequest)
 		return
