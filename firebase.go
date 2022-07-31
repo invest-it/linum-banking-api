@@ -16,7 +16,7 @@ var firebaseApp *firebase.App
 func getFirebaseInstance() *firebase.App {
 	if firebaseApp == nil {
 		lock.Lock()
-		defer lock.Lock()
+		defer lock.Unlock()
 		if firebaseApp == nil {
 			var err error
 			firebaseApp, err = initializeFirebase()

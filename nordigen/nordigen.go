@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"linum-banking-api/nordigen/endpoints"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -37,7 +38,7 @@ func GetToken() (*tokenInfo, error) {
 func getNewToken() (*tokenInfo, error) {
 	url := endpoints.UseEndpoint(endpoints.Token)
 
-	data := map[string]string{"secret_id": "SECRET", "secret_key": "SECRET"}
+	data := map[string]string{"secret_id": os.Getenv("NORDIGEN_SECRET_ID"), "secret_key": "NORDIGEN_SECRET_KEY"}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, err

@@ -115,7 +115,12 @@ func NordigenRequisitionLinkHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO: Store reference
-	// TODO: Store requisitionId
+	err = storeRequisitionId(requisition.Id, authToken.UID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
 
 	jsonResp, err := json.Marshal(createRequisitionResponse{Link: requisition.Link})
 	if err != nil {

@@ -15,5 +15,8 @@ func init() {
 
 func main() {
 	getFirebaseInstance()
+	db := getDbInstance()
+	defer db.Close()
 	initializeWebServer()
+
 }
