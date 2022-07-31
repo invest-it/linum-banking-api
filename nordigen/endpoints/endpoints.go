@@ -5,6 +5,7 @@ const (
 	Token        = "/token/new/"
 	Institutions = "/institutions/"
 	Requisitions = "/requisitions/"
+	Accounts     = "/accounts/"
 )
 
 type UrlStr string

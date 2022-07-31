@@ -37,3 +37,28 @@ type requisition struct {
 	AccountSelection  bool   `json:"account_selection"`
 	RedirectImmediate bool   `json:"redirect_immediate"`
 }
+
+type accountTransactions struct {
+	Booked  []transaction `json:"booked"`
+	Pending []transaction `json:"pending"`
+}
+
+type transaction struct {
+	TransactionId                     string            `json:"transactionId"`
+	DebtorName                        string            `json:"debtorName"`
+	DebtorAccount                     debtorAccount     `json:"debtorAccount"`
+	TransactionAmount                 transactionAmount `json:"transactionAmount"`
+	BankTransactionCode               string            `json:"bankTransactionCode"`
+	BookingDate                       string            `json:"bookingDate"`
+	ValueDate                         string            `json:"valueDate"`
+	RemittanceInformationUnstructured string            `json:"remittanceInformationUnstructured"`
+}
+
+type transactionAmount struct {
+	Currency string `json:"currency"`
+	Amount   string `json:"amount"`
+}
+
+type debtorAccount struct {
+	Iban string `json:"iban"`
+}

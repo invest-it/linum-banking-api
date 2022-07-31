@@ -9,10 +9,6 @@ import (
 	"net/http"
 )
 
-const (
-	redirect = "https://www.example.com"
-)
-
 func getToken() (*tokenInfo, error) {
 	url := endpoints.UseEndpoint(endpoints.Token)
 
@@ -33,40 +29,20 @@ func getToken() (*tokenInfo, error) {
 		return nil, fmt.Errorf("server returned status code %d", resp.StatusCode)
 	}
 
-	res := tokenInfo{}
-	if err = json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil, err
-	}
-
-	return &res, nil
+	return mapResponseToStruct[tokenInfo](resp)
 }
 
 func getInstitutionsForCountry(countryCode string, token *tokenInfo) (*[]institution, error) {
 	url := endpoints.UseEndpoint(endpoints.Institutions)
 	endpoints.AddQuery(&url, "country", countryCode)
 
-	resp, err := getWithAuthorization(countryCode, token)
-	defer resp.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("server returned status code %d", resp.StatusCode)
-	}
-
-	var res []institution
-	if err = json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil, err
-	}
-
-	return &res, nil
+	return getAndMapWithAuthorization[[]institution](url, token)
 }
 
-func createRequisition(inst *institution, userLanguage string, token *tokenInfo) (*requisition, error) {
+func createRequisition(inst *institution, userLanguage string, redirectUrl string, token *tokenInfo) (*requisition, error) {
 	reference := uuid.New()
 	requisitionReq := requisitionRequest{
-		Redirect:      redirect,
+		Redirect:      redirectUrl,
 		InstitutionId: inst.Id,
 		Reference:     reference.String(),
 		UserLanguage:  userLanguage,
@@ -78,20 +54,15 @@ func createRequisition(inst *institution, userLanguage string, token *tokenInfo)
 	}
 
 	url := endpoints.UseEndpoint(endpoints.Requisitions)
-	resp, err := postWithAuthorization(url, token, bytes.NewBuffer(jsonData), "application/json")
-	defer resp.Body.Close()
-	if err != nil {
-		return nil, err
-	}
+	return postAndMapWithAuthorization[requisition](url, token, bytes.NewBuffer(jsonData), "application/json")
+}
 
-	if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("server returned status code %d", resp.StatusCode)
-	}
+func getRequisitionById(id string, token *tokenInfo) (*requisition, error) {
+	url := endpoints.UseEndpoint(endpoints.Requisitions) + id
+	return getAndMapWithAuthorization[requisition](url, token)
+}
 
-	var res = requisition{}
-	if err = json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil, err
-	}
-
-	return &res, nil
+func getTransactionsForAccountId(id string, token *tokenInfo) (*accountTransactions, error) {
+	url := endpoints.UseEndpoint(endpoints.Accounts) + id + "/transactions/"
+	return getAndMapWithAuthorization[accountTransactions](url, token)
 }
