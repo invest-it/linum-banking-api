@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	err := godotenv.Load(".env")
+	err := godotenv.Load("../.env")
 
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -15,8 +15,9 @@ func init() {
 
 func main() {
 	getFirebaseInstance()
-	db := getDbInstance()
-	defer db.Close()
+	getDbInstance()
+	// defer db.Close()
+
 	initializeWebServer()
 
 }

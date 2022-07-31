@@ -6,7 +6,8 @@ import (
 	"firebase.google.com/go/auth"
 	"fmt"
 	"github.com/gorilla/mux"
-	"linum-banking-api/nordigen"
+	"linum-banking-api/src/nordigen"
+	"log"
 	"net/http"
 )
 
@@ -21,6 +22,8 @@ func initializeWebServer() {
 	r.HandleFunc("/nordigen/requisition-link", nordigenRequisitionLinkHandler)
 	r.Handle("/nordigen/requisition-link", authorize(http.HandlerFunc(nordigenRequisitionLinkHandler)))
 	http.Handle("/", r)
+	fmt.Println("Starting server...")
+	log.Fatal(http.ListenAndServe(":5555", nil))
 }
 
 func authorize(next http.Handler) http.Handler {

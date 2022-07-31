@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"linum-banking-api/nordigen/endpoints"
+	"linum-banking-api/src/nordigen/endpoints"
 	"net/http"
 	"os"
 	"time"
