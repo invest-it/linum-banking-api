@@ -2,9 +2,9 @@ package nordigen
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 )
 
 type headerMap map[string]string
@@ -26,7 +26,7 @@ func requestWithHeaders(method string, url string, headers headerMap, body io.Re
 
 }
 
-func requestWithAuthorization(method string, url string, token *tokenInfo, body io.Reader, headers headerMap) (*http.Response, error) {
+func requestWithAuthorization(method string, url string, token *TokenInfo, body io.Reader, headers headerMap) (*http.Response, error) {
 	if headers == nil {
 		headers = make(headerMap)
 	}
@@ -34,7 +34,7 @@ func requestWithAuthorization(method string, url string, token *tokenInfo, body 
 	return requestWithHeaders(method, url, headers, body)
 }
 
-func getWithAuthorization(url string, token *tokenInfo) (*http.Response, error) {
+func getWithAuthorization(url string, token *TokenInfo) (*http.Response, error) {
 	return requestWithAuthorization(http.MethodGet, url, token, nil, nil)
 }
 
@@ -47,26 +47,26 @@ func mapResponseToStruct[T any](resp *http.Response) (*T, error) {
 	return &res, nil
 }
 
-func getAndMapWithAuthorization[T any](url string, token *tokenInfo) (*T, error) {
+func getAndMapWithAuthorization[T any](url string, token *TokenInfo) (*T, error) {
 	resp, err := getWithAuthorization(url, token)
 	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}
 	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
-		return nil, fmt.Errorf("server returned status code %d", resp.StatusCode)
+		return nil, handleErrorStatusCode(resp)
 	}
 	return mapResponseToStruct[T](resp)
 }
 
-func postWithAuthorization(url string, token *tokenInfo, body io.Reader, contentType string) (*http.Response, error) {
+func postWithAuthorization(url string, token *TokenInfo, body io.Reader, contentType string) (*http.Response, error) {
 	headers := make(headerMap)
 	headers["Content-Type"] = contentType
 	return requestWithAuthorization(http.MethodPost, url, token, body, headers)
 }
 
-func postAndMapWithAuthorization[T any](url string, token *tokenInfo, body io.Reader, contentType string) (*T, error) {
-	resp, err := http.Post(url, contentType, body)
+func postAndMapWithAuthorization[T any](url string, token *TokenInfo, body io.Reader, contentType string) (*T, error) {
+	resp, err := postWithAuthorization(url, token, body, contentType)
 	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
@@ -74,7 +74,24 @@ func postAndMapWithAuthorization[T any](url string, token *tokenInfo, body io.Re
 
 	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
 		// TODO: Log server response
-		return nil, fmt.Errorf("server returned status code %d", resp.StatusCode)
+
+		return nil, handleErrorStatusCode(resp)
 	}
 	return mapResponseToStruct[T](resp)
+}
+
+func handleErrorStatusCode(resp *http.Response) *ApiError {
+	var apiError ApiError
+	if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+		apiError.StatusCode = resp.StatusCode
+		apiError.Decodable = false
+		rawResp, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			return &apiError
+		}
+		apiError.Raw = string(rawResp)
+		return &apiError
+	}
+	apiError.Decodable = true
+	return &apiError
 }

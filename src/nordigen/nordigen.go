@@ -11,10 +11,10 @@ import (
 	"time"
 )
 
-var token *tokenInfo
+var token *TokenInfo
 var tokenExpiration int64
 
-func GetToken() (*tokenInfo, error) {
+func GetToken() (*TokenInfo, error) {
 	if token == nil {
 		var err error
 		token, err = getNewToken()
@@ -35,10 +35,10 @@ func GetToken() (*tokenInfo, error) {
 	return token, nil
 }
 
-func getNewToken() (*tokenInfo, error) {
+func getNewToken() (*TokenInfo, error) {
 	url := endpoints.UseEndpoint(endpoints.Token)
 
-	data := map[string]string{"secret_id": os.Getenv("NORDIGEN_SECRET_ID"), "secret_key": "NORDIGEN_SECRET_KEY"}
+	data := map[string]string{"secret_id": os.Getenv("NORDIGEN_SECRET_ID"), "secret_key": os.Getenv("NORDIGEN_SECRET_KEY")}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -55,19 +55,19 @@ func getNewToken() (*tokenInfo, error) {
 		return nil, fmt.Errorf("server returned status code %d", resp.StatusCode)
 	}
 
-	return mapResponseToStruct[tokenInfo](resp)
+	return mapResponseToStruct[TokenInfo](resp)
 }
 
-func GetInstitutionsForCountry(countryCode string, token *tokenInfo) (*[]institution, error) {
+func GetInstitutionsForCountry(countryCode string, token *TokenInfo) (*[]Institution, error) {
 	url := endpoints.UseEndpoint(endpoints.Institutions)
 	endpoints.AddQuery(&url, "country", countryCode)
 
-	return getAndMapWithAuthorization[[]institution](url, token)
+	return getAndMapWithAuthorization[[]Institution](url, token)
 }
 
-func CreateRequisition(institutionId string, userLanguage string, redirectUrl string, token *tokenInfo) (*requisition, error) {
+func CreateRequisition(institutionId string, userLanguage string, redirectUrl string, token *TokenInfo) (*Requisition, error) {
 	reference := uuid.New()
-	requisitionReq := requisitionRequest{
+	requisitionReq := RequisitionRequest{
 		Redirect:      redirectUrl,
 		InstitutionId: institutionId,
 		Reference:     reference.String(),
@@ -80,15 +80,15 @@ func CreateRequisition(institutionId string, userLanguage string, redirectUrl st
 	}
 
 	url := endpoints.UseEndpoint(endpoints.Requisitions)
-	return postAndMapWithAuthorization[requisition](url, token, bytes.NewBuffer(jsonData), "application/json")
+	return postAndMapWithAuthorization[Requisition](url, token, bytes.NewBuffer(jsonData), "application/json")
 }
 
-func GetRequisitionById(id string, token *tokenInfo) (*requisition, error) {
+func GetRequisitionById(id string, token *TokenInfo) (*Requisition, error) {
 	url := endpoints.UseEndpoint(endpoints.Requisitions) + id
-	return getAndMapWithAuthorization[requisition](url, token)
+	return getAndMapWithAuthorization[Requisition](url, token)
 }
 
-func GetTransactionsForAccountId(id string, token *tokenInfo) (*accountTransactions, error) {
+func GetTransactionsForAccountId(id string, token *TokenInfo) (*AccountTransactions, error) {
 	url := endpoints.UseEndpoint(endpoints.Accounts) + id + "/transactions/"
-	return getAndMapWithAuthorization[accountTransactions](url, token)
+	return getAndMapWithAuthorization[AccountTransactions](url, token)
 }
