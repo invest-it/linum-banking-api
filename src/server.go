@@ -22,6 +22,7 @@ func initializeWebServer() {
 	r.HandleFunc("/test", testHandler)
 	r.HandleFunc("/nordigen/institutions", nordigenGetInstitutionsHandler)
 	// r.HandleFunc("/nordigen/requisition-link", nordigenRequisitionLinkHandler)
+	r.HandleFunc("/nordigen/callback", nordigenCallbackHandler)
 	r.Handle("/nordigen/requisition-link", authorize(http.HandlerFunc(nordigenRequisitionLinkHandler)))
 	r.Handle("/nordigen/transactions/{requisitionId}", authorize(http.HandlerFunc(nordigenLoadTransactionsHandler)))
 	r.Handle("/nordigen/transactions", authorize(http.HandlerFunc(nordigenLoadAllTransactionsHandler)))
@@ -128,8 +129,9 @@ func nordigenRequisitionLinkHandler(w http.ResponseWriter, r *http.Request) {
 		nordigen.HandleApiError(err)
 		return
 	}
+	fmt.Println(requisition.Reference)
 	// TODO: Store reference (Really necessary though?)
-	err = storeRequisitionId(requisition.Id, authToken.UID)
+	err = storeRequisitionId(requisition.Id, requisition.Reference, authToken.UID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Println(err)
@@ -167,8 +169,7 @@ func nordigenLoadTransactionsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the id belongs to the user
-	_, err := getRequisitionForUser(reqId, authToken.UID)
-	if err != nil {
+	if !userHasRequisition(reqId, authToken.UID) {
 		w.WriteHeader(http.StatusInternalServerError) // TODO: Handle case where no item was found
 		return
 	}
@@ -224,4 +225,23 @@ func getLatestTransaction(transactions []nordigen.Transaction) *nordigen.Transac
 		}
 	}
 	return &latest
+}
+
+func nordigenCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	refIds, ok := r.URL.Query()["ref"]
+	if !ok || len(refIds[0]) < 1 {
+		w.WriteHeader(http.StatusOK)
+		io.WriteString(w, "Could not finish the request, a required reference is missing.")
+	}
+
+	refId := refIds[0]
+
+	err := updateRequisitionState(refId)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "Successfully approved requisition")
 }

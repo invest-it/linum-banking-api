@@ -11,7 +11,6 @@ import (
 var db *sql.DB
 
 func getDbInstance() *sql.DB {
-	fmt.Println("Get instance")
 	if db == nil {
 		lock.Lock()
 		defer lock.Unlock()
@@ -27,10 +26,10 @@ func getDbInstance() *sql.DB {
 	return db
 }
 
-func storeRequisitionId(requisitionId string, uid string) error {
+func storeRequisitionId(requisitionId string, requisitionReference, uid string) error {
 	db := getDbInstance()
-	statement := `INSERT INTO UserRequisitions (RequisitionId, UserId) VALUES ($1, $2)`
-	_, err := db.Exec(statement, requisitionId, uid)
+	statement := `INSERT INTO UserRequisitions (RequisitionId, RequisitionReference, UserId, Approved) VALUES ($1, $2, $3, false)`
+	_, err := db.Exec(statement, requisitionId, requisitionReference, uid)
 	if err != nil {
 		return err
 	}
@@ -61,25 +60,31 @@ func getRequisitionsForUser(uid string) ([]string, error) {
 	return requisitionIds, nil
 }
 
-func getRequisitionForUser(requisitionId string, uid string) ([]string, error) {
+func userHasRequisition(requisitionId string, uid string) bool {
 	db := getDbInstance()
-	rows, err := db.Query("SELECT RequsitionId FROM UserRequisitions WHERE  UserId=? AND RequisitionId=?", uid, requisitionId)
-	if err != nil {
-		return nil, err
+	statement := "SELECT RequsitionId FROM UserRequisitions WHERE  UserId=$1 AND RequisitionId=$2"
+	row := db.QueryRow(statement, uid, requisitionId)
+	var result string
+	if err := row.Scan(&result); err != nil {
+		return false
 	}
-	defer rows.Close()
-	requisitionIds := make([]string, 3) // Most sensible size for requisitions
-	for rows.Next() {
-		var requisitionId string
-		err := rows.Scan(&requisitionId)
-		if err != nil {
-			return nil, err
-		}
-		requisitionIds = append(requisitionIds, requisitionId)
+	return result == requisitionId
+}
+
+func getRequisitionByReference(requisitionReference string) (string, error) {
+	db := getDbInstance()
+	statement := "SELECT RequisitionId FROM UserRequisitions WHERE ReferenceId=$1"
+	row := db.QueryRow(statement, requisitionReference)
+	var requisitionId string
+	if err := row.Scan(&requisitionId); err != nil {
+		return "", err
 	}
-	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
-	return requisitionIds, nil
+	return requisitionId, nil
+}
+
+func updateRequisitionState(requisitionReference string) error {
+	db := getDbInstance()
+	statement := "UPDATE UserRequisitions SET Approved=true WHERE RequisitionReference=$1"
+	_, err := db.Exec(statement, requisitionReference)
+	return err
 }

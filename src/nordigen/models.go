@@ -19,11 +19,14 @@ type Institution struct {
 }
 
 type RequisitionRequest struct {
-	Redirect      string `json:"redirect"`
-	InstitutionId string `json:"institution_id"`
-	Reference     string `json:"reference"`
-	Agreement     string `json:"agreement,omitempty"`
-	UserLanguage  string `json:"user_language"`
+	Redirect          string `json:"redirect"`
+	InstitutionId     string `json:"institution_id"`
+	Reference         string `json:"reference"`
+	Agreement         string `json:"agreement,omitempty"`
+	UserLanguage      string `json:"user_language"`
+	Ssn               string `json:"ssn,omitempty"`
+	AccountSelection  bool   `json:"account_selection,omitempty"`
+	RedirectImmediate bool   `json:"redirect_immediate,omitempty"`
 }
 
 type Requisition struct {
@@ -33,12 +36,13 @@ type Requisition struct {
 	Status            string   `json:"status"`
 	InstitutionId     string   `json:"institution_id"`
 	Agreement         string   `json:"agreement"`
+	Reference         string   `json:"reference"`
 	Accounts          []string `json:"accounts"`
 	UserLanguage      string   `json:"user_language"`
 	Link              string   `json:"link"`
-	Ssn               string   `json:"ssn"`
-	AccountSelection  bool     `json:"account_selection"`
-	RedirectImmediate bool     `json:"redirect_immediate"`
+	Ssn               string   `json:"ssn,omitempty"`
+	AccountSelection  bool     `json:"account_selection,omitempty"`
+	RedirectImmediate bool     `json:"redirect_immediate,omitempty"`
 }
 
 type AccountTransactions struct {
