@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"log"
 	"os"
@@ -10,11 +11,13 @@ import (
 var db *sql.DB
 
 func getDbInstance() *sql.DB {
+	fmt.Println("Get instance")
 	if db == nil {
 		lock.Lock()
 		defer lock.Unlock()
-		if firebaseApp == nil {
+		if db == nil {
 			var err error
+			fmt.Println(os.Getenv("DATABASE_URL"))
 			db, err = sql.Open("pgx", os.Getenv("DATABASE_URL"))
 			if err != nil {
 				log.Fatalf("Could not setup database connection")
@@ -26,7 +29,8 @@ func getDbInstance() *sql.DB {
 
 func storeRequisitionId(requisitionId string, uid string) error {
 	db := getDbInstance()
-	_, err := db.Exec("INSERT INTO UserRequisitions (RequisitionId, UserId) VALUES (?, ?)", requisitionId, uid)
+	statement := `INSERT INTO UserRequisitions (RequisitionId, UserId) VALUES ($1, $2)`
+	_, err := db.Exec(statement, requisitionId, uid)
 	if err != nil {
 		return err
 	}
@@ -35,7 +39,8 @@ func storeRequisitionId(requisitionId string, uid string) error {
 
 func getRequisitionsForUser(uid string) ([]string, error) {
 	db := getDbInstance()
-	rows, err := db.Query("SELECT RequsitionId FROM UserRequisitions WHERE  UserId=?", uid)
+	statement := `SELECT RequisitionId FROM UserRequisitions WHERE UserId=$1`
+	rows, err := db.Query(statement, uid)
 	if err != nil {
 		return nil, err
 	}
