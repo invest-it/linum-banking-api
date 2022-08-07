@@ -170,7 +170,8 @@ func nordigenLoadTransactionsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the id belongs to the user
 	if !userHasRequisition(reqId, authToken.UID) {
-		w.WriteHeader(http.StatusInternalServerError) // TODO: Handle case where no item was found
+		w.WriteHeader(http.StatusUnauthorized) // TODO: Handle case where no item was found
+		fmt.Println("User does not have requisition")
 		return
 	}
 

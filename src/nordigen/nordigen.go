@@ -88,7 +88,7 @@ func GetRequisitionById(id string, token *TokenInfo) (*Requisition, error) {
 	return getAndMapWithAuthorization[Requisition](url, token)
 }
 
-func GetTransactionsForAccountId(id string, token *TokenInfo) (*AccountTransactions, error) {
+func GetTransactionsForAccountId(id string, token *TokenInfo) (*TransactionsResponse, error) {
 	url := endpoints.UseEndpoint(endpoints.Accounts) + id + "/transactions/"
-	return getAndMapWithAuthorization[AccountTransactions](url, token)
+	return getAndMapWithAuthorization[TransactionsResponse](url, token)
 }

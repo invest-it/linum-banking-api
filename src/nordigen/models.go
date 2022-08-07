@@ -50,15 +50,25 @@ type AccountTransactions struct {
 	Pending []Transaction `json:"pending"`
 }
 
+type TransactionsResponse struct {
+	Transactions AccountTransactions `json:"transactions"`
+}
+
 type Transaction struct {
 	TransactionId                     string            `json:"transactionId"`
 	DebtorName                        string            `json:"debtorName"`
 	DebtorAccount                     DebtorAccount     `json:"debtorAccount"`
+	DebtorAgent                       string            `json:"debtorAgent"`
+	CreditorAgent                     string            `json:"creditorAgent"`
 	TransactionAmount                 TransactionAmount `json:"transactionAmount"`
 	BankTransactionCode               string            `json:"bankTransactionCode"`
+	ProprietaryBankTransactionCode    string            `json:"ProprietaryBankTransactionCode"`
+	EntryReference                    string            `json:"entryReference"`
 	BookingDate                       string            `json:"bookingDate"`
 	ValueDate                         string            `json:"valueDate"`
+	RemittanceInformationStructured   string            `json:"remittanceInformationStructured"`
 	RemittanceInformationUnstructured string            `json:"remittanceInformationUnstructured"`
+	AdditionalInformation             string            `json:"additionalInformation"`
 }
 
 type TransactionAmount struct {

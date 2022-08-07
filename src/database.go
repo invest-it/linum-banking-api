@@ -62,12 +62,15 @@ func getRequisitionsForUser(uid string) ([]string, error) {
 
 func userHasRequisition(requisitionId string, uid string) bool {
 	db := getDbInstance()
-	statement := "SELECT RequsitionId FROM UserRequisitions WHERE  UserId=$1 AND RequisitionId=$2"
+	statement := "SELECT RequisitionId FROM UserRequisitions WHERE  UserId=$1 AND RequisitionId=$2"
 	row := db.QueryRow(statement, uid, requisitionId)
 	var result string
 	if err := row.Scan(&result); err != nil {
+		fmt.Println(err)
 		return false
 	}
+	fmt.Println(result)
+	fmt.Println(requisitionId)
 	return result == requisitionId
 }
 
