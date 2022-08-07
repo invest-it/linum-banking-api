@@ -10,6 +10,7 @@ import (
 	"linum-banking-api/src/nordigen"
 	"log"
 	"net/http"
+	"time"
 )
 
 const (
@@ -130,7 +131,6 @@ func nordigenRequisitionLinkHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(requisition.Reference)
-	// TODO: Store reference (Really necessary though?)
 	err = storeRequisitionId(requisition.Id, requisition.Reference, authToken.UID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -221,7 +221,13 @@ func getLatestTransaction(transactions []nordigen.Transaction) *nordigen.Transac
 	}
 	latest := transactions[0]
 	for _, transaction := range transactions {
-		if transaction.ValueDate > latest.ValueDate { // TODO: Parse date first
+		transactionDate, err := time.Parse("2006-01-02", transaction.ValueDate)
+		latestDate, err := time.Parse("2006-01-02", latest.ValueDate)
+		if err != nil {
+			// TODO: Handle error -> Throw or quiet?
+			return &latest
+		}
+		if transactionDate.Unix() > latestDate.Unix() {
 			latest = transaction
 		}
 	}
